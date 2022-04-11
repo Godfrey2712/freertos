@@ -66,12 +66,9 @@ const int Time_Task6 = 100;
 const int Time_Task7 = 33;                     //actual value = 33.33
 const int Time_Task8 = 33;                     //actual value = 33.33 
 const int Time_Task9 = 5000;
-const int B = 50;                            //time of HIGH from Assignment 1 in ms
+const int B = 50;                              //time of HIGH from Assignment 1
 
-
-float i = 0;
 float task5_av;
-float task5_sum;
 
 //===============================================================//
 //------------Function models to be called in the loop-----------// 
@@ -99,114 +96,105 @@ static SemaphoreHandle_t mutex;                  //type of semaphore in use
 
 s_data datas;
 
+unsigned int       queuerec1 =          0;    //1st analogue value from queue
+unsigned int       queuerec2 =          0;    //2nd analogue value from queue
+unsigned int       queuerec3 =          0;    //3rd analogue value from queue
+unsigned int       queuerec4 =          0;    //4th analogue value from queue
 
-unsigned int       queuerec1 =          0;
-unsigned int       queuerec2 =          0;
-unsigned int       queuerec3 =          0;
-unsigned int       queuerec4 =          0;
 void setup() {
 // initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
 
-// queue setup
+// queue setup with 4 as the stack size
   queue = xQueueCreate( 4, sizeof( float ) );
 
   mutex = xSemaphoreCreateMutex();
   
-  // Now set up two tasks to run independently.
+//=========== Ten tasks setup to run independently===========//
   xTaskCreatePinnedToCore(
     task1
-    ,  "WatchDog"   // A name just for humans
-    ,  4096  // This stack size can be checked & adjusted by reading the Stack Highwater
+    ,  "Task 1"                   // A name just for humans
+    ,  4096                       // This stack size can be checked & adjusted by reading the Stack Highwater
     ,  NULL
-    ,  1   // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    ,  1                          // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
     ,  NULL
-    ,  ARDUINO_RUNNING_CORE);
+    ,  ARDUINO_RUNNING_CORE);     // Tasks running on the first core with the other for the CPU
     
-      // Now set up two tasks to run independently.
   xTaskCreatePinnedToCore(
     task2
-    ,  "DigitalRead"   // A name just for humans
-    ,  4096  // This stack size can be checked & adjusted by reading the Stack Highwater
+    ,  "Task 2"   
+    ,  4096  
     ,  NULL
-    ,  1  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    ,  1  
     ,  NULL 
     ,  ARDUINO_RUNNING_CORE);
 
-    // Now set up two tasks to run independently.
   xTaskCreatePinnedToCore(
     task3
-    ,  "FrequencyRead"   // A name just for humans
-    ,  4096  // This stack size can be checked & adjusted by reading the Stack Highwater
+    ,  "Task 3"   
+    ,  4096  
     ,  NULL
-    ,  1  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    ,  1  
     ,  NULL 
     ,  ARDUINO_RUNNING_CORE);
 
-      // Now set up two tasks to run independently.
   xTaskCreatePinnedToCore(
     task4
-    ,  "AnalogueInput"   // A name just for humans
-    ,  4096  // This stack size can be checked & adjusted by reading the Stack Highwater
+    ,  "Task 4"   
+    ,  4096  
     ,  NULL
-    ,  6  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    ,  6  
     ,  NULL 
     ,  ARDUINO_RUNNING_CORE);
 
-      // Now set up two tasks to run independently.
   xTaskCreatePinnedToCore(
     task5
-    ,  "AnalogueInputAverage"   // A name just for humans
-    ,  4096  // This stack size can be checked & adjusted by reading the Stack Highwater
+    ,  "Task 5"   
+    ,  4096  
     ,  NULL
-    ,  1  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    ,  1  
     ,  NULL 
     ,  ARDUINO_RUNNING_CORE);
 
-      // Now set up two tasks to run independently.
   xTaskCreatePinnedToCore(
     task6
-    ,  "asm"   // A name just for humans
-    ,  4096  // This stack size can be checked & adjusted by reading the Stack Highwater
+    ,  "Task 6"   
+    ,  4096  
     ,  NULL
-    ,  1  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    ,  1  
     ,  NULL 
     ,  ARDUINO_RUNNING_CORE);
 
-      // Now set up two tasks to run independently.
   xTaskCreatePinnedToCore(
     task7
-    ,  "errorcode"   // A name just for humans
-    ,  4096  // This stack size can be checked & adjusted by reading the Stack Highwater
+    ,  "Task 7"   
+    ,  4096  
     ,  NULL
-    ,  1  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    ,  1  
     ,  NULL
     ,  ARDUINO_RUNNING_CORE);
 
-      // Now set up two tasks to run independently.
   xTaskCreatePinnedToCore(
     task8
-    ,  "errorcodevis"   // A name just for humans
-    ,  4096  // This stack size can be checked & adjusted by reading the Stack Highwater
+    ,  "Task 8"  
+    ,  4096  
     ,  NULL
-    ,  1  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    ,  1  
     ,  NULL 
     ,  ARDUINO_RUNNING_CORE);
 
-      // Now set up two tasks to run independently.
   xTaskCreatePinnedToCore(
     task9
-    ,  "logvalues"   // A name just for humans
-    ,  4096  // This stack size can be checked & adjusted by reading the Stack Highwater
+    ,  "Task 9 & 10"   
+    ,  4096 
     ,  NULL
-    ,  1 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    ,  1 
     ,  NULL 
     ,  ARDUINO_RUNNING_CORE);
 
 }
 
-void loop(){  
-}
+void loop(){}
 
 
 //=================================//
@@ -215,18 +203,15 @@ void loop(){
 void task1(void *pvParameters) {
   (void) pvParameters;
 
-    // initialize digital LED on pin 21 as an output.
+  // initialize digital LED on pin 21 as an output.
   pinMode(LED, OUTPUT);
   
-  //Serial.println("Task 1");
-  // Set LED to state of ledState each timethrough loop()
-  // If ledState hasn't changed, neither will the pin
-  for (;;)
+  for (;;)  //loop forever
 {
     digitalWrite(LED, HIGH);   // turn the LED on (HIGH is the voltage level)
-    delayMicroseconds(B);  // one tick delay (15ms) in between reads for stability
+    delayMicroseconds(B);      // one tick delay (50us) in between reads for stability
     digitalWrite(LED, LOW);    // turn the LED off by making the voltage LOW
-    vTaskDelay(Time_Task1);  // one tick delay (15ms) in between reads for stability
+    vTaskDelay(Time_Task1);    // one tick delay (14ms) in between reads for stability
   }
 }
  
@@ -238,19 +223,17 @@ void task2(void *pvParameters) {
   (void) pvParameters;
   for (;;)
   {
-  //Serial.println ("Task 2");
-  xSemaphoreTake(mutex, portMAX_DELAY); // use of a semaphore to protect the data from the structure ( wait function of the semaphore)
+  xSemaphoreTake(mutex, portMAX_DELAY); // using a semaphore to protect the data from the structure ( wait function of the semaphore)
   if (digitalRead (digital_input)){
     datas.monitor_task2 = 1;
   }
   else{
     datas.monitor_task2 = 0;
   }
-  xSemaphoreGive(mutex); // end of the use of the semaphore (signal functio of the semaphore)
-  vTaskDelay(Time_Task2 / portTICK_PERIOD_MS);  // one tick delay (15ms) in between reads for stability
+  xSemaphoreGive(mutex);               // end of the use of the semaphore (signal functio of the semaphore)
+  vTaskDelay(Time_Task2 / portTICK_PERIOD_MS);  // one tick delay (Time_Task2) in between reads for stability
   }
 }
-
 
 
 //=================================//
@@ -260,25 +243,6 @@ void task3(void *pvParameters) {
   (void) pvParameters;
   for (;;)
   {
-    /*
-      unsigned long frequency;
-    unsigned long half_period_high = pulseIn(squarewave_reader, HIGH);
-    unsigned long half_period_low  = pulseIn(squarewave_reader, LOW);
-    
-    if((half_period_high + half_period_low) == 0){ // in the case there is no readed signal, we set the frequency at 0 to avoid a division by 0
-      frequency = 0;
-    }
-    else{
-      frequency = 1000000/(half_period_high + half_period_low);  
-    }
-    
-    xSemaphoreTake(mutex, portMAX_DELAY);
-    datas.task3_frequency = frequency;
-    xSemaphoreGive(mutex);
-    vTaskDelay(Time_Task3 / portTICK_PERIOD_MS);  // one tick delay (15ms) in between reads for stability
-  }
-  */
-  //Serial.println("Task 3");
   unfiltered_frequency=digitalRead(squarewave_reader);
   unfiltered_frequency_old= unfiltered_frequency;
   frequency_count=0;    
@@ -300,11 +264,11 @@ void task3(void *pvParameters) {
     
     if (micros()>= start_timeF +40000){                       //increasing 40000uS to 1sec
       
-        datas.task3_frequency =frequency_count*25/2;                //actual frequency read from the frequency generator 
+        datas.task3_frequency =frequency_count*25/2;          //actual frequency read from the frequency generator 
         xSemaphoreGive(mutex);
       }
       
-      vTaskDelay(Time_Task3 / portTICK_PERIOD_MS);  // one tick delay (15ms) in between reads for stability
+      vTaskDelay(Time_Task3 / portTICK_PERIOD_MS);  // one tick delay (Time_Task3) in between reads for stability
   }
   
 }
@@ -317,19 +281,15 @@ void task4(void *pvParameters) {
   (void) pvParameters;
   for (;;)
   {
-  //Serial.println ("Task 4");
-
-    //Serial.println ("Task 4");
 
   for(int i=1; i<4; i++){
     analogue_input_task4[i] = analogue_input_task4[1];
   }
   analogue_input_task4[1] = analogRead (analogue_reader);    //reading one analogue value
   task4_average = analogue_input_task4[1];
-  xQueueSend(queue,&task4_average,1); // send the value inside the queue
-  vTaskDelay(Time_Task4 / portTICK_PERIOD_MS);  // one tick delay (15ms) in between reads for stability
+  xQueueSend(queue,&task4_average,1);                        // send the value inside the queue
+  vTaskDelay(Time_Task4 / portTICK_PERIOD_MS);               // one tick delay (Time_Task4) in between reads for stability
   }
-  Serial.println (task4_average);
 }
 
 
@@ -343,9 +303,10 @@ void task5(void *pvParameters) {
   int queuerec3;
   int queuerec4;
   for(;;){
-    
-
-    queuerec4 = queuerec3; // change
+//=============================================================================//
+//=========setting the values of the analogue values based on last value=======//
+//=============================================================================//
+    queuerec4 = queuerec3; 
     queuerec3 = queuerec2;
     queuerec2 = queuerec1;
     xQueueReceive(queue,&queuerec1,portMAX_DELAY); // reception of the value in the queue to protect the data
@@ -354,7 +315,7 @@ void task5(void *pvParameters) {
     datas.task5_av = (queuerec1 + queuerec2 + queuerec3 + queuerec4)/4;
     xSemaphoreGive(mutex);
 
-vTaskDelay(Time_Task5 / portTICK_PERIOD_MS);  // one tick delay (15ms) in between reads for stability
+vTaskDelay(Time_Task5 / portTICK_PERIOD_MS);  // one tick delay (Time_Task5) in between reads for stability
   }
 
 }
@@ -370,7 +331,7 @@ void task6(void *pvParameters) {
   for(int i=0; i<1000; i++){
     __asm__ __volatile__ ("nop");
   }
-  vTaskDelay(Time_Task6 / portTICK_PERIOD_MS);  // one tick delay (15ms) in between reads for stability
+  vTaskDelay(Time_Task6 / portTICK_PERIOD_MS);  // one tick delay (Time_Task6) in between reads for stability
 }
 }
 
@@ -382,9 +343,7 @@ void task7(void *pvParameters) {
   (void) pvParameters;
   for (;;)
   {
-  //Serial.println (task5_average);
 
-  
   int max_range = 4096;                //maximum range when varied on the potentiometer
   int half_max = max_range / 2;        //half of maximum range calculated
   xSemaphoreTake(mutex,portMAX_DELAY); // protection of the average_analog_value 
@@ -395,7 +354,7 @@ void task7(void *pvParameters) {
     error_code = 0;
   }
   xSemaphoreGive(mutex);
-  vTaskDelay(Time_Task7 / portTICK_PERIOD_MS);  // one tick delay (15ms) in between reads for stability
+  vTaskDelay(Time_Task7 / portTICK_PERIOD_MS);  // one tick delay (Time_Task7) in between reads for stability
 }
 }
 
@@ -418,28 +377,28 @@ void task8(void *pvParameters) {
    {
    digitalWrite(error_LED,LOW);       //turned on because task5_average < half_max
   }
-  vTaskDelay(Time_Task8 / portTICK_PERIOD_MS);  // one tick delay (15ms) in between reads for stability
+  vTaskDelay(Time_Task8 / portTICK_PERIOD_MS);  // one tick delay (Time_Task8) in between reads for stability
 }
 }
 
 
-//=================================//
-//-------function for task 9------//
-//================================//
+//============================================//
+//-------function for task 9 and task 10------//
+//============================================//
 void task9(void *pvParameters) { 
   (void) pvParameters;
   for (;;)
   {
-  //===================================================================================================// 
+  //========================================================================================================================// 
   //---printing out the values of digital button state, frequency value, and filtered analogue input after every 5seconds---//
-  //===================================================================================================//
-
+  //-------------------------------------when button state from task 2 is HIGH----------------------------------------------//
+  //========================================================================================================================//
 
   if(digitalRead (digital_input) ){ 
   xSemaphoreTake(mutex, portMAX_DELAY); //protection of shared data
   Serial.println((String)datas.monitor_task2+ "," + (String) datas.task3_frequency + "Hz," + (String)datas.task5_av);
   xSemaphoreGive(mutex);
   }
-  vTaskDelay(Time_Task9 / portTICK_PERIOD_MS);  // one tick delay (15ms) in between reads for stability
+  vTaskDelay(Time_Task9 / portTICK_PERIOD_MS);  // one tick delay (Time_Task9) in between reads for stability
 }
 }
