@@ -66,19 +66,8 @@ const int Time_Task6 = 100;
 const int Time_Task7 = 33;                     //actual value = 33.33
 const int Time_Task8 = 33;                     //actual value = 33.33 
 const int Time_Task9 = 5000;
-const int B = 0.05;                            //time of HIGH from Assignment 1 in ms
+const int B = 50;                            //time of HIGH from Assignment 1 in ms
 
-
-//======================================================//
-//---------------On and Off Times-----------------------//
-//======================================================//
-const int unsigned onTime = B / 1000;
-const int unsigned offTime = Time_Task1;
- 
-unsigned long previousMillis=0;                 //Tracks the last time event fired for task 1
-unsigned long previousMillis_task9=0;           //Tracks the last time event fired for task 9
-int interval = offTime;                         // Interval is how long we wait
-boolean ledState = true;                       // Used to track if LED should be on or off
 
 float i = 0;
 float task5_av;
@@ -98,10 +87,11 @@ void task8( void *pvParameters );
 void task9( void *pvParameters );
 
 
-static QueueHandle_t queue;
-static SemaphoreHandle_t mutex;
+static QueueHandle_t queue;                      //queue initilization
+static SemaphoreHandle_t mutex;                  //type of semaphore in use
 
-typedef struct s_data {
+//global struct to store task2, task3, and task 5 
+ typedef struct s_data {                     
  byte  monitor_task2            : 1;
  unsigned int task3_frequency   : 10;
  unsigned int task5_av          : 12;
@@ -234,7 +224,7 @@ void task1(void *pvParameters) {
   for (;;)
 {
     digitalWrite(LED, HIGH);   // turn the LED on (HIGH is the voltage level)
-    delayMicroseconds(50);  // one tick delay (15ms) in between reads for stability
+    delayMicroseconds(B);  // one tick delay (15ms) in between reads for stability
     digitalWrite(LED, LOW);    // turn the LED off by making the voltage LOW
     vTaskDelay(Time_Task1);  // one tick delay (15ms) in between reads for stability
   }
